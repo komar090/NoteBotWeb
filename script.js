@@ -14,7 +14,7 @@ function log(msg) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    log("🚀 App V5.2 (Fix Crash)");
+    log("🚀 App V5.3 (Safety Checks)");
     log("Target API: " + API_BASE_URL);
 
     if (window.Telegram && window.Telegram.WebApp) {
@@ -87,6 +87,12 @@ async function loadTasks() {
     const list = document.getElementById('taskList');
     const count = document.getElementById('taskCount');
     // list.innerHTML = '<div class="loader"></div>';
+
+    if (!tg || !tg.initData) {
+        log("Cannot load tasks: InitData missing");
+        list.innerHTML = `<div style="padding:20px; text-align:center; opacity:0.5;">Waiting for Telegram...</div>`;
+        return;
+    }
 
     try {
         // Construct URL with initData for auth
@@ -177,6 +183,7 @@ async function createTask() {
 }
 
 function loadProfile() {
+    if (!tg || !tg.initDataUnsafe) return;
     const user = tg.initDataUnsafe.user;
     if (user) {
         document.getElementById('profileName').innerText = user.first_name + (user.last_name ? ' ' + user.last_name : '');
