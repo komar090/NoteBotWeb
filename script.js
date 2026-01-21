@@ -35,7 +35,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Setup Button
         tg.MainButton.textColor = '#FFFFFF';
         tg.MainButton.color = '#3390ec';
+        tg.MainButton.onClick(createTask);
     } else {
+
         log("⚠️ Telegram WebApp not detected");
     }
 
@@ -204,7 +206,8 @@ function escapeHtml(text) {
 // -- LISTENERS --
 
 // Main Button click (for Create view)
-tg.MainButton.onClick(createTask);
+// Moved inside init logic
+
 
 // Input listener to show button
 taskInput.addEventListener('input', () => {
