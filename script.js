@@ -6,7 +6,7 @@ tg.MainButton.color = '#3390ec';
 // -- CONFIGURATION --
 // Replace this with your VPS URL (Must be HTTPS for production!)
 // For testing locally or via ngrok, use that URL.
-const API_BASE_URL = "https://c1eb3a3262e24058-46-149-67-44.serveousercontent.com/api";
+const API_BASE_URL = "https://f76a81559479856a-46-149-67-44.serveousercontent.com/api";
 // -------------------
 
 // DEBUG logger
@@ -19,7 +19,7 @@ function log(msg) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    log("🚀 App V3.1 Loaded");
+    log("🚀 App V5.0 (Final Link Check)");
     log("Target API: " + API_BASE_URL);
 
     // Initialize
