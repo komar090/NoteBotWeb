@@ -9,6 +9,18 @@ tg.MainButton.color = '#3390ec';
 const API_BASE_URL = "https://7ee1ed2e476a837e-46-149-67-44.serveousercontent.com/api";
 // -------------------
 
+// DEBUG logger
+function log(msg) {
+    const el = document.getElementById('debugLog');
+    if (el) {
+        el.innerText += msg + "\n";
+    }
+    console.log(msg);
+}
+
+log("App Started v3.0");
+log("API URL: " + API_BASE_URL);
+
 let taskInput = document.getElementById("taskInput");
 let categorySelect = document.getElementById("categorySelect");
 let dateInput = document.getElementById("dateInput");
