@@ -1,34 +1,23 @@
-let tg = window.Telegram.WebApp;
-tg.expand();
-tg.MainButton.textColor = '#FFFFFF';
-tg.MainButton.color = '#3390ec';
-
-// -- CONFIGURATION --
-// Replace this with your VPS URL (Must be HTTPS for production!)
-// For testing locally or via ngrok, use that URL.
-const API_BASE_URL = "https://f76a81559479856a-46-149-67-44.serveousercontent.com/api";
-// -------------------
-
-// DEBUG logger
-function log(msg) {
-    const el = document.getElementById('debugLog');
-    if (el) {
-        el.innerText += msg + "\n";
-    }
-    console.log(msg);
-}
+let tg = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-    log("🚀 App V5.0 (Final Link Check)");
+    log("🚀 App V5.1 (Auth Debug)");
     log("Target API: " + API_BASE_URL);
 
-    // Initialize
     if (window.Telegram && window.Telegram.WebApp) {
-        window.Telegram.WebApp.ready();
-        window.Telegram.WebApp.expand();
+        tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+        console.log("TG InitData:", tg.initData); // Hidden log for console
         log("TG WebApp Ready");
-        log("User: " + (window.Telegram.WebApp.initDataUnsafe?.user?.first_name || "Unknown"));
-        log("InitData Len: " + tg.initData.length);
+
+        const user = tg.initDataUnsafe?.user;
+        log("User: " + (user?.first_name || "Unknown"));
+        log("InitData Len: " + (tg.initData ? tg.initData.length : "0 (EMPTY!)"));
+
+        if (!tg.initData) {
+            log("⚠️ CRITICAL: InitData is missing! Are you using the Menu Button?");
+        }
     } else {
         log("⚠️ Telegram WebApp not detected");
     }
