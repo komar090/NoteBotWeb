@@ -1,66 +1,145 @@
 :root {
-    --tg-theme-bg-color: #212121;
+    --tg-theme-bg-color: #0f0f0f;
     --tg-theme-text-color: #ffffff;
     --tg-theme-hint-color: #aaaaaa;
     --tg-theme-link-color: #3390ec;
     --tg-theme-button-color: #3390ec;
     --tg-theme-button-text-color: #ffffff;
-    --tg-theme-secondary-bg-color: #181818;
+    --tg-theme-secondary-bg-color: #1c1c1e;
+
+    /* Glassmorphism Variables */
+    --glass-bg: rgba(30, 30, 30, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    --backdrop-blur: blur(12px);
+    --gradient-1: #4caf50;
+    --gradient-2: #2196f3;
 }
 
 body {
     background-color: var(--tg-theme-bg-color);
+    background-image:
+        radial-gradient(circle at 10% 20%, rgba(76, 175, 80, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(33, 150, 243, 0.15) 0%, transparent 40%);
+    background-attachment: fixed;
     color: var(--tg-theme-text-color);
     font-family: 'Inter', sans-serif;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    min-height: 100vh;
+    overflow-x: hidden;
 }
 
 .container {
     padding: 20px;
-    max-width: 500px;
+    max-width: 600px;
     margin: 0 auto;
+    padding-bottom: 80px;
+    /* Space for Navbar */
+}
+
+/* Glass Card */
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: var(--backdrop-blur);
+    -webkit-backdrop-filter: var(--backdrop-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    box-shadow: var(--glass-shadow);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+h1,
+h2,
+h3 {
+    margin: 0 0 15px 0;
+    font-weight: 700;
+    letter-spacing: -0.5px;
 }
 
 h1 {
-    font-size: 24px;
-    margin-bottom: 24px;
-    font-weight: 600;
+    font-size: 28px;
 }
 
+h2 {
+    font-size: 20px;
+}
+
+/* Tabs Navigation */
+.navbar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 400px;
+    background: rgba(40, 40, 40, 0.8);
+    backdrop-filter: blur(20px);
+    border-radius: 100px;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 1000;
+}
+
+.nav-item {
+    padding: 10px 20px;
+    border-radius: 50px;
+    color: #888;
+    text-decoration: none;
+    font-size: 24px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-item.active {
+    background: var(--tg-theme-button-color);
+    color: white;
+    box-shadow: 0 4px 15px rgba(51, 144, 236, 0.4);
+}
+
+/* Form Elements */
 .form-group {
     margin-bottom: 20px;
 }
 
 label {
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     font-weight: 500;
     color: var(--tg-theme-hint-color);
     font-size: 14px;
+    margin-left: 5px;
 }
 
-textarea, select, input {
+textarea,
+select,
+input {
     width: 100%;
-    padding: 12px;
-    border-radius: 12px;
-    border: 1px solid transparent;
-    background-color: var(--tg-theme-secondary-bg-color);
-    color: var(--tg-theme-text-color);
+    padding: 16px;
+    border-radius: 16px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
     font-family: inherit;
     font-size: 16px;
     outline: none;
     box-sizing: border-box;
-    transition: border-color 0.2s;
+    transition: all 0.3s ease;
 }
 
-textarea:focus, select:focus, input:focus {
+textarea:focus,
+select:focus,
+input:focus {
     border-color: var(--tg-theme-link-color);
-}
-
-textarea {
-    resize: none;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 4px rgba(51, 144, 236, 0.1);
 }
 
 .row {
@@ -72,12 +151,106 @@ textarea {
     flex: 1;
 }
 
-.hint {
-    text-align: center;
-    color: var(--tg-theme-hint-color);
-    font-size: 13px;
-    margin-top: 30px;
+/* Task List */
+.task-item {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* Telegram WebApp mimics */
-/* Usually main button is native, so we don't style a button here */
+.task-item:last-child {
+    border-bottom: none;
+}
+
+.task-checkbox {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--tg-theme-hint-color);
+    margin-right: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.task-checkbox.checked {
+    background: var(--tg-theme-button-color);
+    border-color: var(--tg-theme-button-color);
+}
+
+.task-checkbox.checked::after {
+    content: '✓';
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.task-content {
+    flex: 1;
+}
+
+.task-text {
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.task-text.done {
+    text-decoration: line-through;
+    color: var(--tg-theme-hint-color);
+}
+
+.task-meta {
+    font-size: 12px;
+    color: var(--tg-theme-hint-color);
+    display: flex;
+    gap: 10px;
+}
+
+.badge {
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    font-size: 11px;
+}
+
+/* Loading Spinner */
+.loader {
+    width: 30px;
+    height: 30px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--tg-theme-link-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 40px auto;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Views */
+.view {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.view.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
