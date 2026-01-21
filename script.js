@@ -1,7 +1,20 @@
 let tg = null;
 
+// -- CONFIGURATION --
+const API_BASE_URL = "https://f76a81559479856a-46-149-67-44.serveousercontent.com/api";
+// -------------------
+
+// DEBUG logger
+function log(msg) {
+    const el = document.getElementById('debugLog');
+    if (el) {
+        el.innerText += msg + "\n";
+    }
+    console.log(msg);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    log("🚀 App V5.1 (Auth Debug)");
+    log("🚀 App V5.2 (Fix Crash)");
     log("Target API: " + API_BASE_URL);
 
     if (window.Telegram && window.Telegram.WebApp) {
@@ -18,6 +31,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!tg.initData) {
             log("⚠️ CRITICAL: InitData is missing! Are you using the Menu Button?");
         }
+
+        // Setup Button
+        tg.MainButton.textColor = '#FFFFFF';
+        tg.MainButton.color = '#3390ec';
     } else {
         log("⚠️ Telegram WebApp not detected");
     }
