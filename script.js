@@ -6,7 +6,7 @@ tg.MainButton.color = '#3390ec';
 // -- CONFIGURATION --
 // Replace this with your VPS URL (Must be HTTPS for production!)
 // For testing locally or via ngrok, use that URL.
-const API_BASE_URL = "https://7ee1ed2e476a837e-46-149-67-44.serveousercontent.com/api";
+const API_BASE_URL = "https://c1eb3a3262e24058-46-149-67-44.serveousercontent.com/api";
 // -------------------
 
 // DEBUG logger
@@ -209,9 +209,5 @@ taskInput.addEventListener('input', () => {
 });
 
 // Init
-document.addEventListener('DOMContentLoaded', () => {
-    // Default view
-    switchView('tasks');
+// Duplicate listener removed. Initial switchView is handled in the top listener.
 
-    // Apply theme colors manually if needed, but CSS vars handle most.
-});
