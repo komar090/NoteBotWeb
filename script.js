@@ -35,14 +35,22 @@ taskInput.addEventListener('input', () => {
 });
 
 // Handle Button Click
-Telegram.WebApp.onEvent('mainButtonClicked', function () {
-    let data = {
-        action: "create_task",
-        text: taskInput.value.trim(),
-        category: categorySelect.value,
-        date: dateInput.value,
-        time: timeInput.value
-    };
+tg.MainButton.onClick(function () {
+    // alert("Button Clicked!"); // Debug
+    try {
+        let data = {
+            action: "create_task",
+            text: taskInput.value.trim(),
+            category: categorySelect.value,
+            date: dateInput.value,
+            time: timeInput.value
+        };
 
-    tg.sendData(JSON.stringify(data));
+        // alert("Sending: " + JSON.stringify(data)); // Debug
+        tg.sendData(JSON.stringify(data));
+        // alert("Data sent!"); // Debug
+    } catch (e) {
+        console.error("Error sending data:", e);
+        alert("Ошибка при отправке данных: " + e.message);
+    }
 });
