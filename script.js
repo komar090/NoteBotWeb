@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.Telegram.WebApp.expand();
         log("TG WebApp Ready");
         log("User: " + (window.Telegram.WebApp.initDataUnsafe?.user?.first_name || "Unknown"));
+        log("InitData Len: " + tg.initData.length);
     } else {
         log("⚠️ Telegram WebApp not detected");
     }
@@ -85,7 +86,7 @@ async function loadTasks() {
         console.log("Fetching:", url);
 
         const response = await fetch(url);
-        if (!response.ok) throw new Error("API Error");
+        if (!response.ok) throw new Error(`API Error: ${response.status} ${response.statusText}`);
 
         const tasks = await response.json();
 
