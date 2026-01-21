@@ -36,7 +36,7 @@ taskInput.addEventListener('input', () => {
 
 // Handle Button Click
 tg.MainButton.onClick(function () {
-    alert("Button Clicked!"); // Debug ENABLED
+
     try {
         let data = {
             action: "create_task",
@@ -46,10 +46,10 @@ tg.MainButton.onClick(function () {
             time: timeInput.value
         };
 
-        alert("Sending: " + JSON.stringify(data)); // Debug ENABLED
         tg.sendData(JSON.stringify(data));
-        alert("Data sent!"); // Debug ENABLED
+        tg.close(); // Close app after sending
     } catch (e) {
+
         console.error("Error sending data:", e);
         alert("Ошибка при отправке данных: " + e.message);
     }
