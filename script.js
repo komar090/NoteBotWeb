@@ -14,7 +14,7 @@ function log(msg) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    log("🚀 App V5.3 (Safety Checks)");
+    log("🚀 App V8.0 (AI & Voice)");
     log("Target API: " + API_BASE_URL);
 
     if (window.Telegram && window.Telegram.WebApp) {
@@ -153,6 +153,119 @@ async function completeTask(id, checkboxEl) {
         alert("Ошибка сети");
     }
 }
+
+// -- AI & VOICE FEATURES --
+
+async function analyzeText() {
+    const text = taskInput.value.trim();
+    if (!text) return;
+
+    const btn = document.getElementById('btnMagic');
+    btn.style.animation = "spin 1s linear infinite"; // Reuse loader spin
+
+    try {
+        const url = `${API_BASE_URL}/analyze?initData=${encodeURIComponent(tg.initData)}`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: text })
+        });
+
+        if (!response.ok) throw new Error("AI Error");
+        const data = await response.json();
+        fillForm(data);
+
+    } catch (e) {
+        log("Magic failed: " + e.message);
+        alert("✨ Не удалось поколдовать: " + e.message);
+    } finally {
+        btn.style.animation = "none";
+    }
+}
+
+// Voice Recording
+let mediaRecorder;
+let audioChunks = [];
+
+async function toggleRecording() {
+    const btn = document.getElementById('btnMic');
+
+    if (mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+        btn.classList.remove("recording");
+        // Icon back to mic
+        btn.innerHTML = '<ion-icon name="mic-outline"></ion-icon>';
+    } else {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+
+            mediaRecorder.ondataavailable = event => {
+                audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' }); // or webm
+                audioChunks = [];
+                await sendVoice(audioBlob);
+            };
+
+            mediaRecorder.start();
+            btn.classList.add("recording");
+            btn.innerHTML = '<ion-icon name="square"></ion-icon>'; // Stop icon
+
+        } catch (err) {
+            log("Mic Error: " + err.message);
+            alert("🎤 Ошибка доступа к микрофону. Разрешите доступ в настройках.");
+        }
+    }
+}
+
+async function sendVoice(blob) {
+    const btn = document.getElementById('btnMic');
+    // Visual loading state
+    btn.style.opacity = "0.5";
+
+    const formData = new FormData();
+    formData.append("file", blob, "voice.wav");
+    formData.append("initData", tg.initData);
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/voice`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) throw new Error("Voice API Error");
+        const data = await response.json();
+
+        if (data.text) {
+            // Show transcribed text first
+            taskInput.value = data.text;
+            tg.MainButton.show();
+        }
+        fillForm(data);
+
+    } catch (e) {
+        log("Voice send failed: " + e.message);
+        alert("Ошибка обработки голоса");
+    } finally {
+        btn.style.opacity = "1";
+    }
+}
+
+function fillForm(data) {
+    if (data.clean_text) taskInput.value = data.clean_text;
+    if (data.category) categorySelect.value = data.category;
+    if (data.date) dateInput.value = data.date;
+    if (data.time) timeInput.value = data.time;
+
+    // Highlight that magic happened
+    taskInput.style.borderColor = "#ffd700";
+    setTimeout(() => taskInput.style.borderColor = "", 1000);
+}
+
+// -- END AI FEATURES --
 
 async function createTask() {
     const data = {

@@ -44,7 +44,18 @@
             <div class="glass-card">
                 <div class="form-group">
                     <label>Что нужно сделать?</label>
-                    <textarea id="taskInput" rows="3" placeholder="Купить молоко..."></textarea>
+                    <div class="input-wrapper" style="position: relative;">
+                        <textarea id="taskInput" rows="3" placeholder="Купить молоко..."></textarea>
+                        <div class="input-tools"
+                            style="position: absolute; bottom: 10px; right: 10px; display: flex; gap: 10px;">
+                            <button id="btnMic" class="icon-btn" onclick="toggleRecording()">
+                                <ion-icon name="mic-outline"></ion-icon>
+                            </button>
+                            <button id="btnMagic" class="icon-btn" onclick="analyzeText()">
+                                <ion-icon name="sparkles-outline"></ion-icon>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -118,7 +129,7 @@
         </a>
     </nav>
 
-    <script src="script.js?v=7"></script>
+    <script src="script.js?v=8"></script>
 </body>
 
 </html>
