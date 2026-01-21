@@ -6,7 +6,7 @@ tg.MainButton.color = '#3390ec';
 // -- CONFIGURATION --
 // Replace this with your VPS URL (Must be HTTPS for production!)
 // For testing locally or via ngrok, use that URL.
-const API_BASE_URL = "https://70c61aed1af41199-94-131-14-111.serveousercontent.com/api";
+const API_BASE_URL = "https://76aa15f849e6c05b-46-149-67-44.serveousercontent.com/api";
 // -------------------
 
 let taskInput = document.getElementById("taskInput");
