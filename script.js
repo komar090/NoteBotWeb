@@ -18,8 +18,22 @@ function log(msg) {
     console.log(msg);
 }
 
-log("App Started v3.0");
-log("API URL: " + API_BASE_URL);
+document.addEventListener('DOMContentLoaded', () => {
+    log("🚀 App V3.1 Loaded");
+    log("Target API: " + API_BASE_URL);
+
+    // Initialize
+    if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand();
+        log("TG WebApp Ready");
+        log("User: " + (window.Telegram.WebApp.initDataUnsafe?.user?.first_name || "Unknown"));
+    } else {
+        log("⚠️ Telegram WebApp not detected");
+    }
+
+    loadTasks();
+});
 
 let taskInput = document.getElementById("taskInput");
 let categorySelect = document.getElementById("categorySelect");
