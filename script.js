@@ -90,7 +90,7 @@ async function loadTasks() {
         updateProgress(tasks.length);
 
     } catch (e) {
-        console.error(e);
+        log("ERROR: " + e.message);
         list.innerHTML = `<div style="padding:20px; text-align:center; color:#ff5252;">Ошибка загрузки (API)<br><small>${e.message}</small></div>`;
     }
 }
