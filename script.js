@@ -14,7 +14,7 @@ function log(msg) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    log("🚀 App V9.0 (FINAL DEBUG)");
+    log("🚀 App V13.0 (Premium)");
     log("Target API: " + API_BASE_URL);
 
     if (window.Telegram && window.Telegram.WebApp) {
@@ -164,22 +164,13 @@ async function deleteTask(id) {
     if (!confirm("Удалить задачу?")) return;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/tasks/${id}`, {
-            method: 'DELETE', // Method DELETE
-            headers: {
-                // For some proxies, query params for auth are safer than headers if configured that way
-            }
-        });
-
-        // Pass auth via query param as we do elsewhere, but fetch default doesn't allow body in DELETE easily, 
-        // but verify if backend accepts query param on DELETE. Yes.
-        // Wait, I missed adding initData to URL in the fetch above.
-
-        await fetch(`${API_BASE_URL}/tasks/${id}?initData=${encodeURIComponent(tg.initData)}`, {
+        const response = await fetch(`${API_BASE_URL}/tasks/${id}?initData=${encodeURIComponent(tg.initData)}`, {
             method: 'DELETE'
         });
 
-        loadTasks(); // Reload list
+        if (!response.ok) throw new Error("Server Error: " + response.status);
+
+        loadTasks(); // Reload to refresh list
     } catch (e) {
         alert("Ошибка удаления: " + e.message);
     }
@@ -243,13 +234,33 @@ async function loadProfile() {
 function loadAdminStats() {
     const container = document.getElementById('adminStats');
     if (container) {
-        container.innerHTML = "Subscribing to realtime updates...";
-        // Mock for now
+        container.innerHTML = '<div class="loader"></div>';
+
+        // Mock data with interactive buttons
         setTimeout(() => {
             container.innerHTML = `
                 <div class="glass-card">
-                    <h3>👥 Пользователи: 1,342</h3>
-                    <h3>💰 Доход: 45,900₽</h3>
+                    <h3>📊 Статистика</h3>
+                    <div style="display:flex; justify-content:space-between; margin-top:10px;">
+                        <div>
+                            <div style="font-size:24px; font-weight:bold;">12</div>
+                            <div style="font-size:12px; opacity:0.7;">Юзеров</div>
+                        </div>
+                        <div>
+                            <div style="font-size:24px; font-weight:bold;">45</div>
+                            <div style="font-size:12px; opacity:0.7;">Задач</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <h3>⚡ Управление</h3>
+                    <button class="btn" onclick="alert('Рассылка запущена!')" style="background:var(--tg-theme-button-color); margin-top:10px; width:100%;">
+                        📢 Сделать рассылку
+                    </button>
+                    <button class="btn" onclick="alert('Уведомления отправлены!')" style="background:rgba(255,255,255,0.1); margin-top:10px; width:100%;">
+                        🔔 Пуш-уведомление
+                    </button>
                 </div>
             `;
         }, 500);
