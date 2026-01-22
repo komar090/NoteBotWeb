@@ -14,104 +14,134 @@
 </head>
 
 <body>
-    <div class="container">
-        <!-- View 1: My Tasks -->
-        <div id="view-tasks" class="view active">
-            <h1 style="display: flex; justify-content: space-between; align-items: center;">
-                Мои задачи
-                <span id="taskCount" style="font-size: 16px; opacity: 0.7; font-weight: normal;">0</span>
-            </h1>
+    <!-- API Status Bar (Self-Check) -->
+    <div id="apiStatus" style="padding: 5px 15px; font-size: 10px; text-align: right; opacity: 0.5;">
+        API: <span id="apiStatusText">Checking...</span>
+    </div>
 
-            <div id="taskList" class="glass-card" style="padding: 0;">
-                <div class="loader"></div>
+    <!-- View 1: My Tasks -->
+    <div id="view-tasks" class="view active">
+        <h1 style="display: flex; justify-content: space-between; align-items: center;">
+            Мои задачи
+            <span id="taskCount" style="font-size: 16px; opacity: 0.7; font-weight: normal;">0</span>
+        </h1>
+
+        <div id="taskList" class="glass-card" style="padding: 0;">
+            <div class="loader"></div>
+        </div>
+
+        <div class="glass-card">
+            <h2>✨ Прогресс</h2>
+            <div
+                style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-top: 10px;">
+                <div id="progressBar"
+                    style="width: 0%; height: 100%; background: linear-gradient(90deg, #4caf50, #8bc34a); transition: width 0.5s;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View 2: Create Task -->
+    <div id="view-create" class="view">
+        <h1>🚀 Новая задача</h1>
+
+        <div class="glass-card">
+            <div class="form-group">
+                <label>Что нужно сделать?</label>
+                <div class="input-wrapper" style="position: relative;">
+                    <textarea id="taskInput" rows="3" placeholder="Купить молоко..."></textarea>
+                </div>
             </div>
 
-            <div class="glass-card">
-                <h2>✨ Прогресс</h2>
+            <div class="form-group">
+                <label>Категория</label>
+                <select id="categorySelect">
+                    <option value="Работа">💼 Работа</option>
+                    <option value="Личное">🏠 Личное</option>
+                    <option value="Покупки">🛒 Покупки</option>
+                    <option value="Учеба">📚 Учеба</option>
+                    <option value="Идеи">💡 Идеи</option>
+                </select>
+            </div>
+
+            <div class="row">
+                <div class="form-group half">
+                    <label>Дата</label>
+                    <input type="date" id="dateInput">
+                </div>
+                <div class="form-group half">
+                    <label>Время</label>
+                    <input type="time" id="timeInput">
+                </div>
+            </div>
+        </div>
+
+        <p class="hint">Заполните поля и нажмите кнопку создания</p>
+
+        <!-- DEBUG LOG (Collapsible or hidden by default) -->
+        <div style="margin-top:20px; border-top:1px solid #333; padding-top:10px;">
+            <p style="font-size:10px; color:#666; cursor:pointer;"
+                onclick="document.getElementById('debugLog').style.display = document.getElementById('debugLog').style.display === 'none' ? 'block' : 'none'">
+                DEBUG INFO (click to toggle)</p>
+            <pre id="debugLog"
+                style="background:#000; color:#0f0; padding:10px; font-size:10px; overflow-x:scroll; border-radius:8px; display:none;"></pre>
+        </div>
+    </div>
+
+    <!-- View 3: Settings -->
+    <div id="view-settings" class="view">
+        <h1>⚙️ Настройки</h1>
+        <div class="glass-card">
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
                 <div
-                    style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-top: 10px;">
-                    <div id="progressBar"
-                        style="width: 0%; height: 100%; background: linear-gradient(90deg, #4caf50, #8bc34a); transition: width 0.5s;">
-                    </div>
+                    style="width: 50px; height: 50px; background: var(--tg-theme-button-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                    👤
+                </div>
+                <div>
+                    <h3 id="profileName" style="margin:0;">User</h3>
+                    <span id="profileStatus" class="badge">Loading...</span>
                 </div>
             </div>
         </div>
 
-        <!-- View 2: Create Task -->
-        <div id="view-create" class="view">
-            <h1>🚀 Новая задача</h1>
-
-            <div class="glass-card">
-                <div class="form-group">
-                    <label>Что нужно сделать?</label>
-                    <div class="input-wrapper" style="position: relative;">
-                        <textarea id="taskInput" rows="3" placeholder="Купить молоко..."></textarea>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Категория</label>
-                    <select id="categorySelect">
-                        <option value="Работа">💼 Работа</option>
-                        <option value="Личное">🏠 Личное</option>
-                        <option value="Покупки">🛒 Покупки</option>
-                        <option value="Учеба">📚 Учеба</option>
-                        <option value="Идеи">💡 Идеи</option>
-                    </select>
-                </div>
-
-                <div class="row">
-                    <div class="form-group half">
-                        <label>Дата</label>
-                        <input type="date" id="dateInput">
-                    </div>
-                    <div class="form-group half">
-                        <label>Время</label>
-                        <input type="time" id="timeInput">
-                    </div>
-                </div>
-            </div>
-
-            <p class="hint">Заполните поля и нажмите кнопку создания</p>
-
-            <!-- DEBUG LOG -->
-            <div style="margin-top:20px; border-top:1px solid #333; padding-top:10px;">
-                <p style="font-size:10px; color:#666;">DEBUG INFO:</p>
-                <pre id="debugLog"
-                    style="background:#000; color:#0f0; padding:10px; font-size:10px; overflow-x:scroll; border-radius:8px;"></pre>
+        <div class="glass-card">
+            <h3>🕒 Часовой пояс</h3>
+            <div class="form-group" style="margin-top:10px;">
+                <select id="tzSelect" onchange="updateTimezone()">
+                    <option value="UTC">UTC (0)</option>
+                    <option value="Europe/Moscow">Москва (+3)</option>
+                    <option value="Asia/Yekaterinburg">Екатеринбург (+5)</option>
+                    <option value="Asia/Novosibirsk">Новосибирск (+7)</option>
+                    <option value="Asia/Vladivostok">Владивосток (+10)</option>
+                </select>
             </div>
         </div>
 
-        <!-- View 3: Settings -->
-        <div id="view-settings" class="view">
-            <h1>⚙️ Настройки</h1>
-            <div class="glass-card">
-                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-                    <div
-                        style="width: 50px; height: 50px; background: var(--tg-theme-button-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px;">
-                        👤
-                    </div>
-                    <div>
-                        <h3 id="profileName" style="margin:0;">User</h3>
-                        <span id="profileStatus" class="badge">Loading...</span>
-                    </div>
-                </div>
+        <div class="glass-card">
+            <h3>📂 Категории</h3>
+            <div id="categoryList" style="margin-top:10px;">
+                <!-- Categories will be listed here -->
             </div>
-
-            <div class="glass-card">
-                <h3 style="margin-bottom: 15px;">О приложении</h3>
-                <p style="font-size: 14px; opacity: 0.7;">Версия 3.0 (Premium)</p>
-                <p style="font-size: 14px; opacity: 0.7;">Backend: FastAPI</p>
+            <div class="form-group" style="margin-top:15px; display:flex; gap:10px;">
+                <input type="text" id="newCatInput" placeholder="Новая категория" style="flex:1;">
+                <button class="btn" onclick="addNewCategory()"
+                    style="padding: 10px; background:var(--tg-theme-button-color);">➕</button>
             </div>
         </div>
 
-        <!-- View 4: Admin (Hidden) -->
-        <div id="view-admin" class="view">
-            <h1>⚡ Admin Panel</h1>
-            <div id="adminStats">
-                Loading...
-            </div>
+        <div class="glass-card">
+            <h3 style="margin-bottom: 5px;">О приложении</h3>
+            <p style="font-size: 12px; opacity: 0.5;">Версия 4.0 (Mini App Focus)</p>
         </div>
+    </div>
+
+    <!-- View 4: Admin (Hidden) -->
+    <div id="view-admin" class="view">
+        <h1>⚡ Admin Panel</h1>
+        <div id="adminStats">
+            Loading...
+        </div>
+    </div>
     </div>
 
     <!-- Navigation -->

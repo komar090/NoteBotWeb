@@ -1,7 +1,9 @@
 let tg = null;
 
 // -- CONFIGURATION --
-const API_BASE_URL = "https://46.149.67.44.sslip.io/api";
+// The base URL must be HTTPS to work with Telegram Mini App on GitHub Pages.
+// We use sslip.io for a free SSL-compatible hostname for the IP.
+const API_BASE_URL = "https://46.149.67.44.sslip.io";
 // -------------------
 
 // DEBUG logger
@@ -14,33 +16,24 @@ function log(msg) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    log("🚀 App V13.0 (Premium)");
+    log("🚀 App V15.0 (Mini App Focus)");
     log("Target API: " + API_BASE_URL);
 
     if (window.Telegram && window.Telegram.WebApp) {
         tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
-        console.log("TG InitData:", tg.initData); // Hidden log for console
         log("TG WebApp Ready");
-
-        const user = tg.initDataUnsafe?.user;
-        log("User: " + (user?.first_name || "Unknown"));
-        log("InitData Len: " + (tg.initData ? tg.initData.length : "0 (EMPTY!)"));
-
-        if (!tg.initData) {
-            log("⚠️ CRITICAL: InitData is missing! Are you using the Menu Button?");
-        }
 
         // Setup Button
         tg.MainButton.textColor = '#FFFFFF';
         tg.MainButton.color = '#3390ec';
         tg.MainButton.onClick(createTask);
     } else {
-
         log("⚠️ Telegram WebApp not detected");
     }
 
+    runSelfCheck();
     loadTasks();
 });
 
@@ -49,20 +42,32 @@ let categorySelect = document.getElementById("categorySelect");
 let dateInput = document.getElementById("dateInput");
 let timeInput = document.getElementById("timeInput");
 
+async function runSelfCheck() {
+    const statusText = document.getElementById('apiStatusText');
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/health`);
+        const data = await response.json();
+        if (data.status === 'ok') {
+            statusText.innerText = "ONLINE 🟢";
+            statusText.style.color = "#4caf50";
+        } else {
+            statusText.innerText = "DEGRADED 🟠";
+            statusText.style.color = "#ff9800";
+            log("Health Check Detail: " + JSON.stringify(data.checks));
+        }
+    } catch (e) {
+        statusText.innerText = "OFFLINE 🔴";
+        statusText.style.color = "#f44336";
+        log("Health Check Failed: " + e.message);
+    }
+}
+
 function switchView(viewName) {
-    // Hide all views
     document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
 
-    // Show selected
     document.getElementById(`view-${viewName}`).classList.add('active');
 
-    // Update Nav
-    // Simple logic: mapping icons is hard without IDs, let's just highlight based on index or onclick
-    // Actually our onclick sets 'active' on 'this' but we are calling from inline.
-    // Let's rely on re-querying or just fix the nav-items manually in HTML or here.
-
-    // Better: Update nav highlight
     const navs = document.querySelectorAll('.nav-item');
     navs.forEach(n => n.classList.remove('active'));
 
@@ -73,17 +78,18 @@ function switchView(viewName) {
     } else if (viewName === 'create') {
         navs[1].classList.add('active');
         tg.MainButton.setText("Создать задачу");
-        if (taskInput.value.length > 0) tg.MainButton.show();
+        if (taskInput.value.trim().length > 0) tg.MainButton.show();
     } else if (viewName === 'settings') {
         navs[2].classList.add('active');
         tg.MainButton.hide();
         loadProfile();
+        loadSettings();
+        loadCategories();
     } else if (viewName === 'admin') {
-        // Admin tab logic (added dynamically)
         const adminNav = document.getElementById('nav-admin');
         if (adminNav) adminNav.classList.add('active');
         tg.MainButton.hide();
-        loadAdminStats();
+        // loadAdminStats();
     }
 }
 
@@ -92,24 +98,18 @@ function switchView(viewName) {
 async function loadTasks() {
     const list = document.getElementById('taskList');
     const count = document.getElementById('taskCount');
-    // list.innerHTML = '<div class="loader"></div>';
 
     if (!tg || !tg.initData) {
-        log("Cannot load tasks: InitData missing");
         list.innerHTML = `<div style="padding:20px; text-align:center; opacity:0.5;">Waiting for Telegram...</div>`;
         return;
     }
 
     try {
-        // Construct URL with initData for auth
-        const url = `${API_BASE_URL}/tasks?initData=${encodeURIComponent(tg.initData)}`;
-        console.log("Fetching:", url);
-
+        const url = `${API_BASE_URL}/api/tasks?initData=${encodeURIComponent(tg.initData)}`;
         const response = await fetch(url);
-        if (!response.ok) throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        if (!response.ok) throw new Error(`API Error: ${response.status}`);
 
         const tasks = await response.json();
-
         list.innerHTML = '';
         count.innerText = tasks.length;
 
@@ -125,55 +125,37 @@ async function loadTasks() {
                 <div class="task-checkbox" onclick="completeTask(${task.id}, this)"></div>
                 <div class="task-content">
                     <div class="task-text">${escapeHtml(task.text)}</div>
-                    <div class="task-meta">
-                        <span class="badge">${task.category}</span>
-                    </div>
+                    <div class="task-meta"><span class="badge">${task.category}</span></div>
                 </div>
                 <div onclick="deleteTask(${task.id})" style="opacity:0.5; padding:5px;">🗑</div>
             `;
             list.appendChild(item);
         });
-
         updateProgress(tasks.length);
-
     } catch (e) {
-        log("ERROR: " + e.message);
-        list.innerHTML = `<div style="padding:20px; text-align:center; color:#ff5252;">Ошибка загрузки (API)<br><small>${e.message}</small></div>`;
+        log("Load Tasks Error: " + e.message);
+        list.innerHTML = `<div style="padding:20px; text-align:center; color:#ff5252;">Fail: ${e.message}</div>`;
     }
 }
 
 async function completeTask(id, checkboxEl) {
     if (checkboxEl.classList.contains('checked')) return;
-
     checkboxEl.classList.add('checked');
     const textEl = checkboxEl.parentElement.querySelector('.task-text');
     textEl.style.textDecoration = 'line-through';
     textEl.style.opacity = '0.5';
 
     try {
-        await fetch(`${API_BASE_URL}/tasks/${id}/done?initData=${encodeURIComponent(tg.initData)}`, {
-            method: 'POST'
-        });
-        // Optimistic UI: already updated.
-    } catch (e) {
-        alert("Ошибка сети");
-    }
+        await fetch(`${API_BASE_URL}/api/tasks/${id}/done?initData=${encodeURIComponent(tg.initData)}`, { method: 'POST' });
+    } catch (e) { alert("Ошибка сети"); }
 }
 
 async function deleteTask(id) {
     if (!confirm("Удалить задачу?")) return;
-
     try {
-        const response = await fetch(`${API_BASE_URL}/tasks/${id}?initData=${encodeURIComponent(tg.initData)}`, {
-            method: 'DELETE'
-        });
-
-        if (!response.ok) throw new Error("Server Error: " + response.status);
-
-        loadTasks(); // Reload to refresh list
-    } catch (e) {
-        alert("Ошибка удаления: " + e.message);
-    }
+        await fetch(`${API_BASE_URL}/api/tasks/${id}?initData=${encodeURIComponent(tg.initData)}`, { method: 'DELETE' });
+        loadTasks();
+    } catch (e) { alert("Ошибка удаления: " + e.message); }
 }
 
 async function createTask() {
@@ -186,7 +168,8 @@ async function createTask() {
     };
 
     try {
-        const response = await fetch(`${API_BASE_URL}/tasks?initData=${encodeURIComponent(tg.initData)}`, {
+        const url = `${API_BASE_URL}/api/tasks?initData=${encodeURIComponent(tg.initData)}`;
+        const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -195,112 +178,115 @@ async function createTask() {
         if (response.ok) {
             taskInput.value = '';
             tg.MainButton.hide();
-            tg.showPopup({ message: 'Задача создана!' }, () => {
-                switchView('tasks');
-            });
+            switchView('tasks');
         }
-    } catch (e) {
-        alert("Ошибка создания: " + e.message);
-    }
+    } catch (e) { alert("Ошибка создания: " + e.message); }
 }
 
-async function loadProfile() {
-    if (!tg || !tg.initData) return;
+// -- SETTINGS & CATEGORIES --
 
+async function loadProfile() {
     try {
-        const response = await fetch(`${API_BASE_URL}/me?initData=${encodeURIComponent(tg.initData)}`);
+        const response = await fetch(`${API_BASE_URL}/api/me?initData=${encodeURIComponent(tg.initData)}`);
         if (response.ok) {
             const user = await response.json();
             document.getElementById('profileName').innerText = user.first_name;
             document.getElementById('profileStatus').innerText = user.is_admin ? "👑 Admin" : "User";
 
-            // Show Admin Tab if not already shown
             if (user.is_admin && !document.getElementById('nav-admin')) {
                 const navbar = document.querySelector('.navbar');
                 const adminBtn = document.createElement('a');
-                adminBtn.href = "#";
-                adminBtn.className = "nav-item";
-                adminBtn.id = "nav-admin";
+                adminBtn.href = "#"; adminBtn.className = "nav-item"; adminBtn.id = "nav-admin";
                 adminBtn.onclick = () => switchView('admin');
                 adminBtn.innerHTML = '<ion-icon name="flash-outline" style="color: #ffcc00;"></ion-icon>';
                 navbar.appendChild(adminBtn);
             }
         }
-    } catch (e) {
-        console.error("Profile load failed", e);
-    }
+    } catch (e) { console.error("Profile load failed", e); }
 }
 
-function loadAdminStats() {
-    const container = document.getElementById('adminStats');
-    if (container) {
-        container.innerHTML = '<div class="loader"></div>';
-
-        // Mock data with interactive buttons
-        setTimeout(() => {
-            container.innerHTML = `
-                <div class="glass-card">
-                    <h3>📊 Статистика</h3>
-                    <div style="display:flex; justify-content:space-between; margin-top:10px;">
-                        <div>
-                            <div style="font-size:24px; font-weight:bold;">12</div>
-                            <div style="font-size:12px; opacity:0.7;">Юзеров</div>
-                        </div>
-                        <div>
-                            <div style="font-size:24px; font-weight:bold;">45</div>
-                            <div style="font-size:12px; opacity:0.7;">Задач</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="glass-card">
-                    <h3>⚡ Управление</h3>
-                    <button class="btn" onclick="alert('Рассылка запущена!')" style="background:var(--tg-theme-button-color); margin-top:10px; width:100%;">
-                        📢 Сделать рассылку
-                    </button>
-                    <button class="btn" onclick="alert('Уведомления отправлены!')" style="background:rgba(255,255,255,0.1); margin-top:10px; width:100%;">
-                        🔔 Пуш-уведомление
-                    </button>
-                </div>
-            `;
-        }, 500);
-    }
+async function loadSettings() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/settings?initData=${encodeURIComponent(tg.initData)}`);
+        if (response.ok) {
+            const settings = await response.json();
+            document.getElementById('tzSelect').value = settings.timezone;
+        }
+    } catch (e) { console.error("Settings load failed", e); }
 }
+
+async function updateTimezone() {
+    const tz = document.getElementById('tzSelect').value;
+    const body = new URLSearchParams({ timezone: tz });
+    try {
+        await fetch(`${API_BASE_URL}/api/settings/timezone?initData=${encodeURIComponent(tg.initData)}`, {
+            method: 'POST',
+            body: body
+        });
+        tg.showPopup({ message: "Часовой пояс обновлен!" });
+    } catch (e) { alert("Ошибка обновления!"); }
+}
+
+async function loadCategories() {
+    const list = document.getElementById('categoryList');
+    const select = document.getElementById('categorySelect');
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/categories?initData=${encodeURIComponent(tg.initData)}`);
+        const cats = await response.json();
+
+        // Update Select in Create Task
+        select.innerHTML = '<option value="Работа">💼 Работа</option><option value="Личное">🏠 Личное</option><option value="Покупки">🛒 Покупки</option>';
+        cats.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c; opt.innerText = "📂 " + c;
+            select.appendChild(opt);
+        });
+
+        // Update List in Settings
+        list.innerHTML = '';
+        cats.forEach(c => {
+            const item = document.createElement('div');
+            item.style = "display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05);";
+            item.innerHTML = `<span>${c}</span> <span onclick="deleteCategory('${c}')" style="color:#ff5252; cursor:pointer;">Удалить</span>`;
+            list.appendChild(item);
+        });
+    } catch (e) { console.error("Cats load failed", e); }
+}
+
+async function addNewCategory() {
+    const input = document.getElementById('newCatInput');
+    const name = input.value.trim();
+    if (!name) return;
+    const body = new URLSearchParams({ name: name });
+    try {
+        await fetch(`${API_BASE_URL}/api/categories?initData=${encodeURIComponent(tg.initData)}`, { method: 'POST', body: body });
+        input.value = '';
+        loadCategories();
+    } catch (e) { alert("Ошибка добавления"); }
+}
+
+async function deleteCategory(name) {
+    if (!confirm(`Удалить категорию "${name}"?`)) return;
+    try {
+        await fetch(`${API_BASE_URL}/api/categories/${encodeURIComponent(name)}?initData=${encodeURIComponent(tg.initData)}`, { method: 'DELETE' });
+        loadCategories();
+    } catch (e) { alert("Ошибка удаления"); }
+}
+
+// -- UI HELPERS --
 
 function updateProgress(count) {
-    // Just a visual fun thing
     const bar = document.getElementById('progressBar');
-    // If count < 5, small bar, else full?
-    // Let's say goal is 10 tasks?
     let pct = Math.min((count / 10) * 100, 100);
     bar.style.width = pct + '%';
 }
 
 function escapeHtml(text) {
     if (!text) return text;
-    return text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 
-// -- LISTENERS --
-
-// Main Button click (for Create view)
-// Moved inside init logic
-
-
-// Input listener to show button
 taskInput.addEventListener('input', () => {
-    if (taskInput.value.trim().length > 0) {
-        tg.MainButton.show();
-    } else {
-        tg.MainButton.hide();
-    }
+    if (taskInput.value.trim().length > 0) tg.MainButton.show();
+    else tg.MainButton.hide();
 });
-
-// Init
-// Duplicate listener removed. Initial switchView is handled in the top listener.
-
