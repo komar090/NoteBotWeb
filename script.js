@@ -1,7 +1,7 @@
 let tg = null;
 
 // -- CONFIGURATION --
-const API_BASE_URL = "https://28218d31081d0098-46-149-67-44.serveousercontent.com/api";
+const API_BASE_URL = "https://46.149.67.44.sslip.io/api";
 // -------------------
 
 // DEBUG logger
