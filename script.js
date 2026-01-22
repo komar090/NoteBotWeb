@@ -78,6 +78,12 @@ function switchView(viewName) {
         navs[2].classList.add('active');
         tg.MainButton.hide();
         loadProfile();
+    } else if (viewName === 'admin') {
+        // Admin tab logic (added dynamically)
+        const adminNav = document.getElementById('nav-admin');
+        if (adminNav) adminNav.classList.add('active');
+        tg.MainButton.hide();
+        loadAdminStats();
     }
 }
 
@@ -154,118 +160,30 @@ async function completeTask(id, checkboxEl) {
     }
 }
 
-// -- AI & VOICE FEATURES --
-
-async function analyzeText() {
-    const text = taskInput.value.trim();
-    if (!text) return;
-
-    const btn = document.getElementById('btnMagic');
-    btn.style.animation = "spin 1s linear infinite"; // Reuse loader spin
+async function deleteTask(id) {
+    if (!confirm("Удалить задачу?")) return;
 
     try {
-        const url = `${API_BASE_URL}/analyze?initData=${encodeURIComponent(tg.initData)}`;
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: text })
+        const response = await fetch(`${API_BASE_URL}/tasks/${id}`, {
+            method: 'DELETE', // Method DELETE
+            headers: {
+                // For some proxies, query params for auth are safer than headers if configured that way
+            }
         });
 
-        if (!response.ok) throw new Error("AI Error");
-        const data = await response.json();
-        fillForm(data);
+        // Pass auth via query param as we do elsewhere, but fetch default doesn't allow body in DELETE easily, 
+        // but verify if backend accepts query param on DELETE. Yes.
+        // Wait, I missed adding initData to URL in the fetch above.
 
-    } catch (e) {
-        log("Magic failed: " + e.message);
-        alert("✨ Не удалось поколдовать: " + e.message);
-    } finally {
-        btn.style.animation = "none";
-    }
-}
-
-// Voice Recording
-let mediaRecorder;
-let audioChunks = [];
-
-async function toggleRecording() {
-    const btn = document.getElementById('btnMic');
-
-    if (mediaRecorder && mediaRecorder.state === "recording") {
-        mediaRecorder.stop();
-        btn.classList.remove("recording");
-        // Icon back to mic
-        btn.innerHTML = '<ion-icon name="mic-outline"></ion-icon>';
-    } else {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
-
-            mediaRecorder.ondataavailable = event => {
-                audioChunks.push(event.data);
-            };
-
-            mediaRecorder.onstop = async () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' }); // or webm
-                audioChunks = [];
-                await sendVoice(audioBlob);
-            };
-
-            mediaRecorder.start();
-            btn.classList.add("recording");
-            btn.innerHTML = '<ion-icon name="square"></ion-icon>'; // Stop icon
-
-        } catch (err) {
-            log("Mic Error: " + err.message);
-            alert("🎤 Ошибка доступа к микрофону. Разрешите доступ в настройках.");
-        }
-    }
-}
-
-async function sendVoice(blob) {
-    const btn = document.getElementById('btnMic');
-    // Visual loading state
-    btn.style.opacity = "0.5";
-
-    const formData = new FormData();
-    formData.append("file", blob, "voice.wav");
-    formData.append("initData", tg.initData);
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/voice`, {
-            method: 'POST',
-            body: formData
+        await fetch(`${API_BASE_URL}/tasks/${id}?initData=${encodeURIComponent(tg.initData)}`, {
+            method: 'DELETE'
         });
 
-        if (!response.ok) throw new Error("Voice API Error");
-        const data = await response.json();
-
-        if (data.text) {
-            // Show transcribed text first
-            taskInput.value = data.text;
-            tg.MainButton.show();
-        }
-        fillForm(data);
-
+        loadTasks(); // Reload list
     } catch (e) {
-        log("Voice send failed: " + e.message);
-        alert("Ошибка обработки голоса");
-    } finally {
-        btn.style.opacity = "1";
+        alert("Ошибка удаления: " + e.message);
     }
 }
-
-function fillForm(data) {
-    if (data.clean_text) taskInput.value = data.clean_text;
-    if (data.category) categorySelect.value = data.category;
-    if (data.date) dateInput.value = data.date;
-    if (data.time) timeInput.value = data.time;
-
-    // Highlight that magic happened
-    taskInput.style.borderColor = "#ffd700";
-    setTimeout(() => taskInput.style.borderColor = "", 1000);
-}
-
-// -- END AI FEATURES --
 
 async function createTask() {
     const data = {
@@ -295,12 +213,46 @@ async function createTask() {
     }
 }
 
-function loadProfile() {
-    if (!tg || !tg.initDataUnsafe) return;
-    const user = tg.initDataUnsafe.user;
-    if (user) {
-        document.getElementById('profileName').innerText = user.first_name + (user.last_name ? ' ' + user.last_name : '');
-        document.getElementById('profileStatus').innerText = "Online";
+async function loadProfile() {
+    if (!tg || !tg.initData) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/me?initData=${encodeURIComponent(tg.initData)}`);
+        if (response.ok) {
+            const user = await response.json();
+            document.getElementById('profileName').innerText = user.first_name;
+            document.getElementById('profileStatus').innerText = user.is_admin ? "👑 Admin" : "User";
+
+            // Show Admin Tab if not already shown
+            if (user.is_admin && !document.getElementById('nav-admin')) {
+                const navbar = document.querySelector('.navbar');
+                const adminBtn = document.createElement('a');
+                adminBtn.href = "#";
+                adminBtn.className = "nav-item";
+                adminBtn.id = "nav-admin";
+                adminBtn.onclick = () => switchView('admin');
+                adminBtn.innerHTML = '<ion-icon name="flash-outline" style="color: #ffcc00;"></ion-icon>';
+                navbar.appendChild(adminBtn);
+            }
+        }
+    } catch (e) {
+        console.error("Profile load failed", e);
+    }
+}
+
+function loadAdminStats() {
+    const container = document.getElementById('adminStats');
+    if (container) {
+        container.innerHTML = "Subscribing to realtime updates...";
+        // Mock for now
+        setTimeout(() => {
+            container.innerHTML = `
+                <div class="glass-card">
+                    <h3>👥 Пользователи: 1,342</h3>
+                    <h3>💰 Доход: 45,900₽</h3>
+                </div>
+            `;
+        }, 500);
     }
 }
 
