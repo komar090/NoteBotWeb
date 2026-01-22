@@ -14,7 +14,7 @@ function log(msg) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    log("🚀 App V8.2 (Debug 2)");
+    log("🚀 App V9.0 (FINAL DEBUG)");
     log("Target API: " + API_BASE_URL);
 
     if (window.Telegram && window.Telegram.WebApp) {
